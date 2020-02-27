@@ -34,13 +34,14 @@ To just use the executable:
 crypty-win -h to see usage.
 
 Usage:
+
   crypty-win inputfile -k=cryptokey [-e] [-d] [-o=outputfile]
   
   ./crypty-linux inputfile -k=cryptokey [-e] [-d] [-o=outputfile]
   
   crypty-macos inputfile -k=cryptokey [-e] [-d] [-o=outputfile]
   
-  Crypty will tryt to decrypt the file if the crypty signature is found in the file, otherwise it will encrypt the file.
+  Crypty will try to decrypt the file if the crypty signature is found in the file, otherwise it will encrypt the file.
   
   - inputfile is the name of the file to be encrypted or decrypted (required)
   
