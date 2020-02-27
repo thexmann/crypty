@@ -6,7 +6,7 @@ Crypty will encrypt and decrypt a file using a user provided key.
 Language: Javascript
 
 ## CCTCrypty Class
-To use the CCTCrypty class, include the CCTCrypty.js in your NODEJS program or in your browser code.
+To use the CCTCrypty class, include the cctcrypty.js file in your NODEJS program or in your browser code.
 
 Usage example:
 
