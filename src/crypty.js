@@ -1,29 +1,21 @@
 "use strict";
 const VER = '001';
 
-const secret = require('./secret.js');
+const crypty = require('./cctcrpty.js');
 const fs = require('fs');
 
 var key = null, n, outfile = null, file = null, method = null;
 
-//console.log("Setting params");
-
 for(n=2;n<process.argv.length;n++)
 {
-   if( process.argv[n].substr(0,2) == '-h')
+   if( process.argv[n].substr(0,2) == '-h' || process.argv[n].substr(0,2) == '-?' )
    {
-      console.log('Usage: crypty inputfile -k=key [-e|-d] [-h] [-o=outfile]');
-      console.log('inputfile is the file to be encrypted/decrypted (required)');
-      console.log('-e to encrypt\n-d to decrypt\n-h for help');
-      console.log('-k= specifies the encryption key to be used (required)\n-o= the output file');
-      process.exit(0);
-   }
-   else if( process.argv[n].substr(0,2) == '-?')
-   {
-      console.log('Usage: crypty inputfile -k=key [-e|-d] [-h] [-o=outfile]');
-      console.log('inputfile is the file to be encrypted/decrypted (required)');
-      console.log('-e to encrypt\n-d to decrypt\n-h for help');
-      console.log('-k= specifies the encryption key to be used (required)\n-o= the output file');
+      console.log('\nUsage: crypty inputfile -k=key [-e|-d] [-h] [-o=outfile]');
+      console.log('   inputfile is the file to be encrypted/decrypted (required)');
+      console.log('   -e to force encrypt\n   -d to force decrypt\n   -h for help');
+      console.log('   -k= specifies the encryption key to be used (required)\n   -o= the output file');
+      console.log('Example: crypty image.jpg -k=1234567890   will encrypt image.jpg to image.jpg.enc');
+      console.log('Example: crypty test.txt.enc -k=1234567890 -o=file.txt   will encrypt test.txt.enc to file.txt');
       process.exit(0);
    }
    else if( process.argv[n].substr(0,2) == '-k')
@@ -34,11 +26,11 @@ for(n=2;n<process.argv.length;n++)
    {
       outfile = process.argv[n].substr(3);
    }
-   else if( process.argv[n] == '-e' )
+   else if( !method && process.argv[n] == '-e' )
    {
       method = 'encrypt';
    }
-   else if( process.argv[n] == '-d' )
+   else if( !method && process.argv[n] == '-d' )
    {
       method = 'decrypt';
    }
@@ -47,8 +39,6 @@ for(n=2;n<process.argv.length;n++)
       file = process.argv[n];
   }
 }
-
-//console.log("Using: "+key);
 
 if( !file )
 {
@@ -82,7 +72,7 @@ if( !method )
 
 console.log("Method = "+method);
 
-let cls = secret(key);
+let cls = crypty(key);
 if( method == 'encrypt' )
 {
    let enc = "CCT:CRYPTY"+VER+cls.Encrypt(text);
