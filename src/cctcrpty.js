@@ -1,8 +1,11 @@
 "use strict";
 
-const process = require('process');
+const CURRVER = '002';
 const RNDS = [];
 RNDS['001'] = 3;
+RNDS['002'] = 3;
+
+const process = require('process');
 
 class CCTCrypty
 {
@@ -11,19 +14,25 @@ class CCTCrypty
       this.key = key;
    }
 
+   GetVer()
+   {
+      return CURRVER;
+   }
+
    /////////////////////////////////////////////////////////////////
    // Encrypt a string
    // text = information to be encrypted (binary, ASCII or UTF8)
+   // For version 002
    Encrypt(text)
    {
       let n, iv = "";
       for(n=0;n<32;n++)
          iv += Junk();
       let hkey = HKey(this.key,iv);  
-      let count = RNDS['001'];
+      let count = RNDS[CURRVER];
       let l = text.length;
       let cl = (""+l).length;
-      text = ""+cl+l+text;
+      text = "CCT:"+cl+l+text;
 
       console.log("Rounds = "+count);
 
@@ -33,38 +42,34 @@ class CCTCrypty
          console.log("Progress: "+prog+"%");
          text = Encrypt(text,hkey);
       }
-      return iv+text;
+      return "CCT:CRYPTY"+CURRVER+iv+text;
    }
 
    /////////////////////////////////////////////////////////////////
    // Decrypt a string
    // text = binary data to be decrypted
    // ver = version used to encrypt the string
-   Decrypt(text, ver)
+   Decrypt(text,ver)
    {
+      if( text.substr(0,10) !== "CCT:CRYPTY")
+      {
+         console.log("Error: This file is not encrypted with Crypty");
+         process.exit(-1);
+      }
+      ver = text.substr(10,3);
+      text = text.substr(13);
       let iv = text.substr(0,32);
       text = text.substr(32);
       let hkey = HKey(this.key,iv);
       let n, count = RNDS[ver];
 
-      console.log("Rounds = "+count);
-
       for(n=0;n<count;n++)
       {
-         console.log("Round: "+n);
          let f = 'Decrypt'+ver;
-         text = decrypt[ver](text,hkey);
-
-         // decrypt using the version that encrypted it
-         // switch(ver)
-         // {
-         // case '001':
-         //    text = Decrypt001(text,hkey);
-         //    break;
-         // }
+         text = Decrypters[ver](text,hkey);
       }
       // final cleanup per version
-      text = finalize[ver](text);
+      text = Finalize[ver](text);
       return text;
    }
 }
@@ -142,7 +147,7 @@ function Roll(hkey)
 
 /////////////////////////////////////////////////////////////////
 ////////////////////////////////////////
-// Encrypt latest version is 001      //
+// Encrypt latest version             //
 ////////////////////////////////////////
 function Encrypt(text,hkey)
 {
@@ -174,11 +179,12 @@ function Encrypt(text,hkey)
    return enc;
 }
 
-
+var Decrypters = [];
+var Finalize = [];
 ////////////////////////////////////////
 // Decrypt using version is 001       //
 ////////////////////////////////////////
-function Decrypt001(text,hkey)
+Decrypters['001'] = function(text,hkey)
 {
    var i, k = 511, enc = "";
    let rkey = Buffer.from(hkey,'hex');
@@ -208,18 +214,36 @@ function Decrypt001(text,hkey)
    return enc;
 }
 
-function Final001(text)
+Finalize['001'] = function(text)
 {
    let cl = parseInt(text.substr(0,1));
    let l = parseInt(text.substr(1,cl));
    return text.substr(1+cl,l);
 }
 
-// handlers for different encryption versions
-var decrypt = [];
-var finalize = [];
-decrypt['001'] = Decrypt001;
-finalize['001'] = Final001;
+
+///////////////////////////////////////
+// Decrypt using version is 002      //
+////////////////////////////////////////
+Decrypters['002'] = Decrypters['001'];
+
+Finalize['002'] = function(text)
+{
+   let check = text.substr(0,4);
+   if( check != "CCT:" )
+   {
+      console.log('ERROR: Unable to correctly decrypt the file with the given key');
+      return null;
+   }
+   else
+   {
+      text = text.substr(4);
+      let cl = parseInt(text.substr(0,1));
+      let l = parseInt(text.substr(1,cl));
+      return text.substr(1+cl,l);
+   }
+   
+}
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////

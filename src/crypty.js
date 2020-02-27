@@ -1,7 +1,5 @@
 "use strict";
-const VER = '001';
-
-const crypty = require('./cctcrpty.js');
+const crypty = require('./cctcrpty.min.js');
 const fs = require('fs');
 
 var key = null, n, outfile = null, file = null, method = null;
@@ -10,12 +8,16 @@ for(n=2;n<process.argv.length;n++)
 {
    if( process.argv[n].substr(0,2) == '-h' || process.argv[n].substr(0,2) == '-?' )
    {
+      let cls = crypty('');
+      console.log('\nCrypty file encryption/decryption\nVersion '+cls.GetVer());
+      console.log('from Cedar CReek Technologies, LLC');
       console.log('\nUsage: crypty inputfile -k=key [-e|-d] [-h] [-o=outfile]');
       console.log('   inputfile is the file to be encrypted/decrypted (required)');
       console.log('   -e to force encrypt\n   -d to force decrypt\n   -h for help');
       console.log('   -k= specifies the encryption key to be used (required)\n   -o= the output file');
-      console.log('Example: crypty image.jpg -k=1234567890   will encrypt image.jpg to image.jpg.enc');
-      console.log('Example: crypty test.txt.enc -k=1234567890 -o=file.txt   will encrypt test.txt.enc to file.txt');
+      console.log('Example: crypty image.jpg -k=1234567890                  will encrypt image.jpg to image.jpg.enc');
+      console.log('Example: crypty test.txt.enc -d -k=1234567890 -o=file.txt   will decrypt test.txt.enc to file.txt');
+      console.log('Example: crypty test.txt -e -k=1234567890                will encrypt test.txt to test.txt.enc');
       process.exit(0);
    }
    else if( process.argv[n].substr(0,2) == '-k')
@@ -54,7 +56,7 @@ if( !key )
 
 if( !fs.existsSync(file) )
 {
-   console.log("ERROR: input file not found");
+   console.log("ERROR: input file '"+ file +"' not found");
    process.exit(-1); 
 }
 
@@ -75,7 +77,7 @@ console.log("Method = "+method);
 let cls = crypty(key);
 if( method == 'encrypt' )
 {
-   let enc = "CCT:CRYPTY"+VER+cls.Encrypt(text);
+   let enc = cls.Encrypt(text);
    if( !outfile )
       outfile = file+'.enc';
    console.log("Saving: "+outfile);
@@ -83,19 +85,15 @@ if( method == 'encrypt' )
 }
 else if( method == 'decrypt' )
 {
-   if( text.substr(0,10) !== "CCT:CRYPTY")
+   let clear = cls.Decrypt(text);
+   if( clear )
    {
-      console.log("Error: This file is not encrypted with Crypty");
-      process.exit(-1);
+      let path = file.split('.');
+      if( !outfile )
+         outfile = path[0]+'.'+path[1];
+      console.log("Writing file: "+outfile);
+      fs.writeFileSync(outfile,clear,'binary');
    }
-   let ver = text.substr(10,3);
-   text = text.substr(13);
-   let clear = cls.Decrypt(text,ver);
-   let path = file.split('.');
-   if( !outfile )
-      outfile = path[0]+'.'+path[1];
-   console.log("Saving: "+outfile);
-   fs.writeFileSync(outfile,clear,'binary');
 }
 else
 {
